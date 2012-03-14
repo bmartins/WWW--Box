@@ -69,7 +69,6 @@ sub get_account_info {
 	}
 	
 }
-=head
 sub get_folder_id {
 	my ($self, $folder) = @_;
 	$folder .='/' if ($folder !~/\/$/);
@@ -98,7 +97,36 @@ sub get_folder_id {
 	
 
 }
-=cut
+
+sub build_tree {
+	use Data::Dumper;
+	my ($self, $folder_id, $folder_name) = @_;
+	my $tree = $self->get_tree($folder_id);
+
+
+	$folder_name.='/' if ($folder_name !~/\/$/);
+	my %tmp_tree = ();
+	for my $folder (keys %{$tree->{'tree'}{'folder'}{'folders'}{'folder'}}) {
+		my $f_name = $folder_name . $folder;
+		$tmp_tree{$f_name}->{'type'} = 'd';
+		$tmp_tree{$f_name}->{'id'} = $tree->{'tree'}{'folder'}{'folders'}{'folder'}{$folder}{'id'};
+	}
+	my %files = %{$tree->{'tree'}{'folder'}{'files'}{'file'}};
+	if (exists $files{'file_name'}) {
+		print STDERR "ONLY ONE FILE\n";
+		my %tmp_file = %files;
+		%files = ();
+		$files{$tmp_file{'id'}} = \%tmp_file;
+	}
+	for my $file_id (keys %files ) {
+		my $f_name = $folder_name . $files{$file_id}->{'file_name'};
+		$tmp_tree{$f_name}->{'type'} = 'f';
+		$tmp_tree{$f_name}->{'id'}   = $file_id;
+	}
+	use Data::Dumper;
+	print Dumper \%tmp_tree;;
+		
+}
 sub get_tree {
 	my ($self, $folder_id) = @_;
 	$folder_id ||= 0;
